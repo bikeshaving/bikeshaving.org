@@ -4,15 +4,17 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "develop": "shovel develop src/server.tsx",
-    "build": "shovel build src/server.tsx --lifecycle",
+    "develop": "shovel develop src/server.ts",
+    "build": "shovel build src/server.ts --lifecycle",
     "start": "shovel start"
   },
   "dependencies": {
     "@b9g/assets": "latest",
     "@b9g/crank": "^0.7.9",
+    "@b9g/crankdown": "file:../crankdown",
     "@b9g/router": "latest",
-    "@b9g/shovel": "latest"
+    "@b9g/shovel": "latest",
+    "marked": "^18.0.0"
   },
   "devDependencies": {
     "@types/node": "latest",

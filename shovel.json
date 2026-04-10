@@ -1,0 +1,14 @@
+{
+  "directories": {
+    "content": {
+      "module": "@b9g/filesystem/node-fs",
+      "export": "NodeFSDirectory",
+      "path": "./content"
+    },
+    "public": {
+      "module": "@b9g/filesystem/node-fs",
+      "export": "NodeFSDirectory",
+      "path": "./dist/public"
+    }
+  }
+}
