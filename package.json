@@ -11,7 +11,7 @@
   "dependencies": {
     "@b9g/assets": "latest",
     "@b9g/crank": "^0.7.9",
-    "@b9g/crankdown": "file:../crankdown",
+    "@b9g/crankdown": "^0.1.2",
     "@b9g/router": "latest",
     "@b9g/shovel": "latest",
     "marked": "^18.0.0"
