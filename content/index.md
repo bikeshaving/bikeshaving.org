@@ -22,6 +22,14 @@ An open source enterprise by [Brian Kim](https://github.com/brainkim).
 - [Skillpack](https://github.com/bikeshaving/skillpack) — Build Agent Skills from your existing docs
 - [Libuild](https://github.com/bikeshaving/libuild) — Zero-config library builds with ESBuild
 - [Crank.py](https://github.com/bikeshaving/crankpy) — Python Frontend Framework, Powered by Crank.js
+- [IPAbet](https://ipabet.org) — A fast and memorable keyboard for typing the International Phonetic Alphabet
+- [TermDOM](https://termdom.org) — Build terminal apps with HTML, CSS and the DOM
+
+<!--
+In the shed (upcoming, expect sawdust):
+- Sup — An extensible markup language: one source, every representation
+- LocaleScript — Blessed keyword localizations for ECMAScript
+-->
 
 ## Links
 
