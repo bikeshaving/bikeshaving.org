@@ -6,7 +6,8 @@
   "scripts": {
     "develop": "shovel develop src/server.ts",
     "build": "shovel build src/server.ts --lifecycle",
-    "start": "shovel start"
+    "start": "shovel start",
+    "deploy": "npm run build && npx wrangler pages deploy dist/public --project-name=bikeshaving-org --commit-dirty=true"
   },
   "dependencies": {
     "@b9g/assets": "latest",

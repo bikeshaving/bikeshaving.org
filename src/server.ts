@@ -65,6 +65,25 @@ self.addEventListener("fetch", (ev) => {
   ev.respondWith(router.handle(ev.request));
 });
 
+// Cloudflare Pages reads this from the deploy root. Pages' default for HTML is
+// max-age=0, must-revalidate (a full round-trip every visit); since content
+// only changes on deploy, let browsers reuse pages briefly and revalidate in
+// the background instead.
+const HEADERS_FILE = `/*
+  Cache-Control: public, max-age=300, stale-while-revalidate=86400
+`;
+
+async function writePublicFile(
+  publicDir: FileSystemDirectoryHandle,
+  path: string,
+  contents: string,
+): Promise<void> {
+  const file = await publicDir.getFileHandle(path, {create: true});
+  const writable = await file.createWritable();
+  await writable.write(contents);
+  await writable.close();
+}
+
 self.addEventListener("install", (ev) => {
   ev.waitUntil((async () => {
     const publicDir = await self.directories.open("public");
@@ -73,10 +92,19 @@ self.addEventListener("install", (ev) => {
       const response = await fetch(route);
       const html = await response.text();
       const path = route === "/" ? "index.html" : `${route.slice(1)}/index.html`;
-      const file = await publicDir.getFileHandle(path, {create: true});
-      const writable = await file.createWritable();
-      await writable.write(html);
-      await writable.close();
+      await writePublicFile(publicDir, path, html);
     }
+
+    await writePublicFile(publicDir, "_headers", HEADERS_FILE);
+
+    // Without a 404.html, Pages serves index.html with a 200 for every
+    // unknown path (SPA fallback) — soft 404s on a content site.
+    const notFound = await renderer.render(jsx`
+      <${Page} title="bikeshaving — not found">
+        <h1>404 — Not Found</h1>
+        <p>There is nothing at this address. <a href="/">Return home.</a></p>
+      <//>
+    `);
+    await writePublicFile(publicDir, "404.html", "<!DOCTYPE html>" + notFound);
   })());
 });
