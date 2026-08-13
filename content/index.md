@@ -15,7 +15,7 @@ An open source enterprise by [Brian Kim](https://github.com/brainkim).
 ## Projects
 
 - [Crank.js](https://github.com/bikeshaving/crank) — The Just JavaScript UI Framework
-- [Repeater.js](https://github.com/repeaterjs/repeater) — The missing constructor for creating safe async iterators
+- [Repeater.js](https://repeater.js.org) — The missing constructor for creating safe async iterators
 - [Shovel.js](https://github.com/bikeshaving/shovel) — Run Service Workers anywhere
 - [ZenDB](https://github.com/bikeshaving/zendb) — Define Zod tables. Write raw SQL. Get typed objects.
 - [Revise.js](https://github.com/bikeshaving/revise) — Rich text editing foundations for the web
