@@ -29,6 +29,7 @@ An open source enterprise by [Brian Kim](https://github.com/brainkim).
 In the shed (upcoming, expect sawdust):
 - Sup — An extensible markup language: one source, every representation
 - LocaleScript — Blessed keyword localizations for ECMAScript
+- IndexedDB — Spec-compliant IndexedDB for server runtimes, with pluggable in-memory and SQLite backends
 -->
 
 ## Links
