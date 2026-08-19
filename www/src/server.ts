@@ -4,7 +4,7 @@ import {Router} from "@b9g/router";
 import {Marked} from "@b9g/crankdown";
 
 function Page({title, children}: {title: string; children: unknown}) {
-  return jsx`
+	return jsx`
     <html lang="en">
       <head>
         <meta charset="utf-8" />
@@ -42,27 +42,27 @@ em { color: #555; }
 }
 
 async function loadContent(path: string): Promise<string> {
-  const contentDir = await self.directories.open("content");
-  const file = await contentDir.getFileHandle(path);
-  const f = await file.getFile();
-  return f.text();
+	const contentDir = await self.directories.open("content");
+	const file = await contentDir.getFileHandle(path);
+	const f = await file.getFile();
+	return f.text();
 }
 
 const router = new Router();
 router.route("/").get(async () => {
-  const markdown = await loadContent("index.md");
-  const html = await renderer.render(jsx`
+	const markdown = await loadContent("index.md");
+	const html = await renderer.render(jsx`
     <${Page} title="bikeshaving">
       <${Marked} markdown=${markdown} />
     <//>
   `);
-  return new Response("<!DOCTYPE html>" + html, {
-    headers: {"content-type": "text/html; charset=utf-8"},
-  });
+	return new Response("<!DOCTYPE html>" + html, {
+		headers: {"content-type": "text/html; charset=utf-8"},
+	});
 });
 
 self.addEventListener("fetch", (ev) => {
-  ev.respondWith(router.handle(ev.request));
+	ev.respondWith(router.handle(ev.request));
 });
 
 // Cloudflare Pages reads this from the deploy root. Pages' default for HTML is
@@ -74,37 +74,39 @@ const HEADERS_FILE = `/*
 `;
 
 async function writePublicFile(
-  publicDir: FileSystemDirectoryHandle,
-  path: string,
-  contents: string,
+	publicDir: FileSystemDirectoryHandle,
+	path: string,
+	contents: string,
 ): Promise<void> {
-  const file = await publicDir.getFileHandle(path, {create: true});
-  const writable = await file.createWritable();
-  await writable.write(contents);
-  await writable.close();
+	const file = await publicDir.getFileHandle(path, {create: true});
+	const writable = await file.createWritable();
+	await writable.write(contents);
+	await writable.close();
 }
 
 self.addEventListener("install", (ev) => {
-  ev.waitUntil((async () => {
-    const publicDir = await self.directories.open("public");
-    const routes = ["/"];
-    for (const route of routes) {
-      const response = await fetch(route);
-      const html = await response.text();
-      const path = route === "/" ? "index.html" : `${route.slice(1)}/index.html`;
-      await writePublicFile(publicDir, path, html);
-    }
+	ev.waitUntil((async () => {
+		const publicDir = await self.directories.open("public");
+		const routes = ["/"];
+		for (const route of routes) {
+			const response = await fetch(route);
+			const html = await response.text();
+			const path = route === "/" ?
+				"index.html" :
+				`${route.slice(1)}/index.html`;
+			await writePublicFile(publicDir, path, html);
+		}
 
-    await writePublicFile(publicDir, "_headers", HEADERS_FILE);
+		await writePublicFile(publicDir, "_headers", HEADERS_FILE);
 
-    // Without a 404.html, Pages serves index.html with a 200 for every
-    // unknown path (SPA fallback) — soft 404s on a content site.
-    const notFound = await renderer.render(jsx`
+		// Without a 404.html, Pages serves index.html with a 200 for every
+		// unknown path (SPA fallback) — soft 404s on a content site.
+		const notFound = await renderer.render(jsx`
       <${Page} title="bikeshaving — not found">
         <h1>404 — Not Found</h1>
         <p>There is nothing at this address. <a href="/">Return home.</a></p>
       <//>
     `);
-    await writePublicFile(publicDir, "404.html", "<!DOCTYPE html>" + notFound);
-  })());
+		await writePublicFile(publicDir, "404.html", "<!DOCTYPE html>" + notFound);
+	})());
 });
