@@ -1,0 +1,37 @@
+{
+	"name": "@b9g/eslint-config",
+	"version": "0.1.0",
+	"description": "Bike Shaving house rules for JavaScript/TypeScript",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/bikeshaving/bikeshaving.org.git",
+		"directory": "eslint-config"
+	},
+	"homepage": "https://github.com/bikeshaving/bikeshaving.org/tree/main/eslint-config#readme",
+	"bugs": {
+		"url": "https://github.com/bikeshaving/bikeshaving.org/issues"
+	},
+	"keywords": [
+		"eslint",
+		"typescript"
+	],
+	"type": "module",
+	"exports": {
+		".": "./index.js"
+	},
+	"files": [
+		"index.js"
+	],
+	"author": "Brian Kim",
+	"license": "MIT",
+	"peerDependencies": {
+		"@eslint/js": ">=9",
+		"@stylistic/eslint-plugin": ">=3",
+		"@typescript-eslint/eslint-plugin": ">=8",
+		"@typescript-eslint/parser": ">=8",
+		"eslint": ">=9",
+		"eslint-plugin-acrocase": ">=0.0.1",
+		"eslint-plugin-crank": ">=0.2.2",
+		"eslint-plugin-esfold": ">=0.1.0"
+	}
+}
