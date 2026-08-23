@@ -1,0 +1,79 @@
+name: Publish
+
+# The only way @b9g/eslint-config reaches npm.
+#
+# Two triggers, both of which are a button a human presses:
+#   - Publishing a GitHub Release (Releases -> Draft a new release -> Publish)
+#   - Actions -> Publish -> Run workflow
+#
+# This workflow holds no npm token. It authenticates with OIDC, so publishing
+# is only possible from inside this file in this repository. Set the package on
+# npmjs.com to "Require two-factor authentication and disallow tokens" and
+# `npm publish` from a laptop stops working for everyone, including agents.
+#
+# And it cannot make a version live on its own. Its trust grant is
+# `--allow-stage-publish` only, so the most a compromised run can do is upload
+# a candidate to the staging area, where it is visible and rejectable.
+# Shipping is a separate human act, from a laptop, with 2FA:
+#
+#     npm stage list
+#     npm stage download <stage-id>    # inspect the actual tarball
+#     npm stage approve <stage-id>     # or: npm stage reject <stage-id>
+#
+# The grant is created once by a package owner, and names this file. Renaming
+# the file invalidates it:
+#
+#     npm trust github @b9g/eslint-config \
+#       --repo bikeshaving/bikeshaving.org \
+#       --file publish.yml \
+#       --env npm \
+#       --allow-stage-publish
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      # Trusted publishing needs npm 11.5.1 or later.
+      - run: npm install -g npm@latest
+
+      - run: npm ci || npm install
+
+      # The config lints itself with the rules it ships, so this is the whole
+      # test suite: a rule that crashes or contradicts another one fails here.
+      - run: npm run lint
+
+      # Fails loudly if the tag and the manifest disagree, so a release can
+      # never publish a version nobody named.
+      - name: Check the tag matches the version
+        if: github.event_name == 'release'
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          PKG="$(node -p "require('./eslint-config/package.json').version")"
+          if [ "$TAG" != "$PKG" ]; then
+            echo "Tag $TAG does not match package version $PKG"
+            exit 1
+          fi
+
+      # Staged from eslint-config/, never the repository root. That
+      # distinction is load-bearing: the root manifest is `private: true` and
+      # is the npm workspace holding both this package and the website, so a
+      # root publish would either refuse outright or ship the wrong tree.
+      - name: Stage the release
+        working-directory: eslint-config
+        run: npm stage publish --provenance
