@@ -30,6 +30,23 @@ const stylistic = {
 			{enforceForClassMembers: true},
 		],
 
+		"@stylistic/lines-around-comment": [
+			"error",
+			{
+				beforeBlockComment: true,
+				beforeLineComment: false,
+				allowBlockStart: true,
+				allowClassStart: true,
+				allowObjectStart: true,
+				allowArrayStart: true,
+			},
+		],
+		"@stylistic/multiline-comment-style": [
+			"error",
+			"separate-lines",
+			{checkJSDoc: false},
+		],
+
 		"@stylistic/no-multiple-empty-lines": [
 			"error",
 			{max: 1, maxBOF: 0, maxEOF: 0},
@@ -52,8 +69,280 @@ function selectorRule(selector, message) {
 	};
 }
 
+const noLeadingTypeOperator = {
+	meta: {
+		type: "problem",
+		schema: [],
+		fixable: "code",
+		messages: {
+			banned:
+				"A union or intersection does not start with `{{operator}}`. Write the first member, then the operator at the end of the line.",
+		},
+	},
+	create(context) {
+		const source = context.sourceCode;
+
+		function check(node) {
+			const first = node.types[0];
+			const operator = source.getTokenBefore(first);
+			if (!operator || operator.range[0] < node.range[0]) {
+				return;
+			}
+
+			context.report({
+				node,
+				loc: operator.loc,
+				messageId: "banned",
+				data: {operator: operator.value},
+				fix(fixer) {
+					const previous = source.getTokenBefore(operator);
+					if (
+						source.getCommentsAfter(previous).length > 0 ||
+						source.getCommentsBefore(first).length > 0
+					) {
+						return null;
+					}
+
+					const gap = source.text
+						.slice(previous.range[1], first.range[0])
+						.replace(operator.value, "");
+					return fixer.replaceTextRange(
+						[previous.range[1], first.range[0]],
+						/\n/.test(gap) ? gap.replace(/[^\S\n]+$/, "") : " ",
+					);
+				},
+			});
+		}
+
+		return {TSUnionType: check, TSIntersectionType: check};
+	},
+};
+
+const paddingAroundDeclarations = {
+	meta: {
+		type: "layout",
+		schema: [],
+		fixable: "whitespace",
+		messages: {
+			padding: "A function or class declaration stands on its own. Put a blank line here.",
+		},
+	},
+	create(context) {
+		const source = context.sourceCode;
+
+		function unwrap(node) {
+			if (
+				node.type === "ExportNamedDeclaration" ||
+				node.type === "ExportDefaultDeclaration"
+			) {
+				return node.declaration;
+			}
+
+			return node;
+		}
+
+		function isDeclaration(node) {
+			const inner = unwrap(node);
+			return (
+				inner != null &&
+				(inner.type === "FunctionDeclaration" ||
+					inner.type === "ClassDeclaration" ||
+					inner.type === "TSDeclareFunction")
+			);
+		}
+
+		function isOverloadPair(previous, next) {
+			const a = unwrap(previous);
+			const b = unwrap(next);
+			return (
+				a != null &&
+				b != null &&
+				a.type === "TSDeclareFunction" &&
+				(b.type === "TSDeclareFunction" || b.type === "FunctionDeclaration") &&
+				a.id != null &&
+				b.id != null &&
+				a.id.name === b.id.name
+			);
+		}
+
+		function startsLine(node) {
+			const lineStart = source.getIndexFromLoc({
+				line: node.loc.start.line,
+				column: 0,
+			});
+			return source.text.slice(lineStart, node.range[0]).trim() === "";
+		}
+
+		function head(node) {
+			let first = node;
+			const comments = source.getCommentsBefore(node);
+			for (let i = comments.length - 1; i >= 0; i--) {
+				const comment = comments[i];
+				if (
+					!startsLine(comment) ||
+					first.loc.start.line - comment.loc.end.line > 1
+				) {
+					break;
+				}
+
+				first = comment;
+			}
+
+			return first;
+		}
+
+		function walk(body) {
+			for (let i = 1; i < body.length; i++) {
+				const previous = body[i - 1];
+				const next = body[i];
+				if (
+					(!isDeclaration(previous) && !isDeclaration(next)) ||
+					isOverloadPair(previous, next)
+				) {
+					continue;
+				}
+
+				const first = head(next);
+				if (first.loc.start.line - previous.loc.end.line >= 2) {
+					continue;
+				}
+
+				const lineStart = source.getIndexFromLoc({
+					line: first.loc.start.line,
+					column: 0,
+				});
+				context.report({
+					node: next,
+					loc: first.loc.start,
+					messageId: "padding",
+					fix: (fixer) =>
+						fixer.insertTextBeforeRange([lineStart, lineStart], "\n"),
+				});
+			}
+		}
+
+		return {
+			Program: (node) => walk(node.body),
+			BlockStatement: (node) => walk(node.body),
+			StaticBlock: (node) => walk(node.body),
+			TSModuleBlock: (node) => walk(node.body),
+			SwitchCase: (node) => walk(node.consequent),
+		};
+	},
+};
+
+const DIRECTIVE =
+	/^\s*(?:eslint\b|eslint-|globals?\b|exported\b|@ts-|prettier-ignore|istanbul\b|[cv]8\b|#)/;
+
+const CHANGELOG = new RegExp(
+	"^(?:" +
+	"(?:added|removed|deleted|renamed|moved|replaced|refactored|updated" +
+	"|changed|simplified|extracted|introduced|switched|converted|migrated)" +
+	"\\s+(?:the|a|an|this|these|those|it|them|back|to|from|out|into" +
+	"|all|old|new|unused|duplicate|redundant|legacy)\\b" +
+	"|(?:previously|formerly|originally|used to|no longer|instead of" +
+	"|we now|this now)\\b" +
+	")",
+	"i",
+);
+
+const noChangelogComments = {
+	meta: {
+		type: "problem",
+		schema: [],
+		messages: {
+			changelog:
+				"A comment describes the code that is here, not how it got here. Say what it does in the present tense, or delete it.",
+		},
+	},
+	create(context) {
+		const source = context.sourceCode;
+		return {
+			Program() {
+				let last = null;
+				for (const comment of source.getAllComments()) {
+					const continued =
+						last != null &&
+						last.type === comment.type &&
+						comment.loc.start.line - last.loc.end.line === 1;
+					last = comment;
+					if (continued || DIRECTIVE.test(comment.value)) {
+						continue;
+					}
+
+					const first = comment.value
+						.split("\n")
+						.map((line) => line.replace(/^\s*\*?\s*/, ""))
+						.find((line) => line !== "");
+					if (first != null && CHANGELOG.test(first)) {
+						context.report({node: comment, messageId: "changelog"});
+					}
+				}
+			},
+		};
+	},
+};
+
+const commentsAboveCode = {
+	meta: {
+		type: "layout",
+		schema: [],
+		fixable: "whitespace",
+		messages: {
+			trailing: "A comment goes above the code it is about, not at the end of the line.",
+		},
+	},
+	create(context) {
+		const source = context.sourceCode;
+		return {
+			Program() {
+				for (const comment of source.getAllComments()) {
+					if (comment.type !== "Line" || DIRECTIVE.test(comment.value)) {
+						continue;
+					}
+
+					const before = source.getTokenBefore(comment, {
+						includeComments: true,
+					});
+					if (
+						before == null ||
+						before.loc.end.line !== comment.loc.start.line
+					) {
+						continue;
+					}
+
+					const lineStart = source.getIndexFromLoc({
+						line: comment.loc.start.line,
+						column: 0,
+					});
+					const indent = /^[^\S\n]*/.exec(
+						source.text.slice(lineStart, comment.range[0]),
+					)[0];
+					context.report({
+						node: comment,
+						messageId: "trailing",
+						fix: (fixer) => [
+							fixer.insertTextBeforeRange(
+								[lineStart, lineStart],
+								`${indent}//${comment.value}\n`,
+							),
+							fixer.removeRange([before.range[1], comment.range[1]]),
+						],
+					});
+				}
+			},
+		};
+	},
+};
+
 const b9g = {
 	rules: {
+		"padding-around-declarations": paddingAroundDeclarations,
+		"comments-above-code": commentsAboveCode,
+		"no-changelog-comments": noChangelogComments,
+
+		"no-leading-type-operator": noLeadingTypeOperator,
+
 		"no-parameter-properties": selectorRule(
 			"TSParameterProperty",
 			"Parameter properties are banned. Declare the field and assign it in the constructor.",
