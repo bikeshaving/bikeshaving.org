@@ -524,12 +524,21 @@ export default [
 			"@typescript-eslint/no-unsafe-declaration-merging": "error",
 			"@typescript-eslint/no-unsafe-function-type": "error",
 			"@typescript-eslint/no-wrapper-object-types": "error",
-			"@typescript-eslint/no-empty-object-type": "error",
+			// An empty interface extending one supertype is the extension point
+			// other packages merge into.
+			"@typescript-eslint/no-empty-object-type": [
+				"error",
+				{allowInterfaces: "with-single-extends"},
+			],
 			"@typescript-eslint/no-extra-non-null-assertion": "error",
 			"@typescript-eslint/no-non-null-asserted-optional-chain": "error",
 			"@typescript-eslint/no-unnecessary-type-constraint": "error",
 			"@typescript-eslint/no-array-constructor": "error",
-			"@typescript-eslint/no-unused-expressions": "error",
+			// A tagged template is a call, and the rule already allows calls.
+			"@typescript-eslint/no-unused-expressions": [
+				"error",
+				{allowTaggedTemplates: true},
+			],
 			"@typescript-eslint/consistent-type-imports": "error",
 			"@typescript-eslint/no-import-type-side-effects": "error",
 			"@typescript-eslint/no-require-imports": "error",
