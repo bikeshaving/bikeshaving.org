@@ -39,6 +39,14 @@ const stylistic = {
 		// forces the `{" "}` spacer to exist.
 		"@stylistic/jsx-one-expression-per-line": "off",
 
+		// An arrow returning JSX keeps its own closer, so a call wrapping one
+		// does not end on two lines of brackets with the comma stranded
+		// between them.
+		"@stylistic/jsx-wrap-multilines": [
+			"error",
+			{...customized["@stylistic/jsx-wrap-multilines"][1], arrow: "ignore"},
+		],
+
 		"@stylistic/quotes": ["error", "double", {avoidEscape: true}],
 		"@stylistic/quote-props": ["error", "as-needed"],
 		"@stylistic/object-curly-spacing": ["error", "never"],
