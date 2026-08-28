@@ -39,6 +39,13 @@ const stylistic = {
 		// forces the `{" "}` spacer to exist.
 		"@stylistic/jsx-one-expression-per-line": "off",
 
+		// Children are left alone. Unwrapping `{"a"}` and `{"b"}` on separate
+		// lines merges two children into one and invents a space between them.
+		"@stylistic/jsx-curly-brace-presence": [
+			"error",
+			{props: "never", children: "ignore", propElementValues: "always"},
+		],
+
 		"@stylistic/quotes": ["error", "double", {avoidEscape: true}],
 		"@stylistic/quote-props": ["error", "as-needed"],
 		"@stylistic/object-curly-spacing": ["error", "never"],
