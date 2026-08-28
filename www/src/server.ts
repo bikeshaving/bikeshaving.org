@@ -91,9 +91,9 @@ self.addEventListener("install", (ev) => {
 		for (const route of routes) {
 			const response = await fetch(route);
 			const html = await response.text();
-			const path = route === "/" ?
-				"index.html" :
-				`${route.slice(1)}/index.html`;
+			const path = route === "/"
+				? "index.html"
+				: `${route.slice(1)}/index.html`;
 			await writePublicFile(publicDir, path, html);
 		}
 

@@ -6,21 +6,39 @@ import crank from "eslint-plugin-crank";
 import esfold from "eslint-plugin-esfold";
 import stylisticPlugin from "@stylistic/eslint-plugin";
 
+const customized = stylisticPlugin.configs.customize({
+	indent: "tab",
+	quotes: "double",
+	semi: true,
+	arrowParens: true,
+	commaDangle: "always-multiline",
+	braceStyle: "1tbs",
+	blockSpacing: false,
+	jsx: true,
+}).rules;
+
 const stylistic = {
 	plugins: {"@stylistic": stylisticPlugin, esfold},
 	rules: {
-		...stylisticPlugin.configs.customize({
-			indent: "tab",
-			quotes: "double",
-			semi: true,
-			arrowParens: true,
-			commaDangle: "always-multiline",
-			braceStyle: "1tbs",
-			blockSpacing: false,
-			jsx: true,
-		}).rules,
+		...customized,
 
-		"@stylistic/operator-linebreak": ["error", "after"],
+		// A ternary branch leads with its operator and sits one tab in. Every
+		// other operator trails.
+		"@stylistic/operator-linebreak": [
+			"error",
+			"after",
+			{overrides: {"?": "before", ":": "before"}},
+		],
+		"@stylistic/indent": [
+			"error",
+			"tab",
+			{...customized["@stylistic/indent"][2], offsetTernaryExpressions: false},
+		],
+
+		// Off, because splitting `{count} comments` over three lines is what
+		// forces the `{" "}` spacer to exist.
+		"@stylistic/jsx-one-expression-per-line": "off",
+
 		"@stylistic/quotes": ["error", "double", {avoidEscape: true}],
 		"@stylistic/object-curly-spacing": ["error", "never"],
 		"@stylistic/array-bracket-spacing": ["error", "never"],
