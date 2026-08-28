@@ -40,6 +40,7 @@ const stylistic = {
 		"@stylistic/jsx-one-expression-per-line": "off",
 
 		"@stylistic/quotes": ["error", "double", {avoidEscape: true}],
+		"@stylistic/quote-props": ["error", "as-needed"],
 		"@stylistic/object-curly-spacing": ["error", "never"],
 		"@stylistic/array-bracket-spacing": ["error", "never"],
 		"@stylistic/computed-property-spacing": [
@@ -306,62 +307,9 @@ const noChangelogComments = {
 	},
 };
 
-const commentsAboveCode = {
-	meta: {
-		type: "layout",
-		schema: [],
-		fixable: "whitespace",
-		messages: {
-			trailing: "A comment goes above the code it is about, not at the end of the line.",
-		},
-	},
-	create(context) {
-		const source = context.sourceCode;
-		return {
-			Program() {
-				for (const comment of source.getAllComments()) {
-					if (comment.type !== "Line" || DIRECTIVE.test(comment.value)) {
-						continue;
-					}
-
-					const before = source.getTokenBefore(comment, {
-						includeComments: true,
-					});
-					if (
-						before == null ||
-						before.loc.end.line !== comment.loc.start.line
-					) {
-						continue;
-					}
-
-					const lineStart = source.getIndexFromLoc({
-						line: comment.loc.start.line,
-						column: 0,
-					});
-					const indent = /^[^\S\n]*/.exec(
-						source.text.slice(lineStart, comment.range[0]),
-					)[0];
-					context.report({
-						node: comment,
-						messageId: "trailing",
-						fix: (fixer) => [
-							fixer.insertTextBeforeRange(
-								[lineStart, lineStart],
-								`${indent}//${comment.value}\n`,
-							),
-							fixer.removeRange([before.range[1], comment.range[1]]),
-						],
-					});
-				}
-			},
-		};
-	},
-};
-
 const b9g = {
 	rules: {
 		"padding-around-declarations": paddingAroundDeclarations,
-		"comments-above-code": commentsAboveCode,
 		"no-changelog-comments": noChangelogComments,
 
 		"no-leading-type-operator": noLeadingTypeOperator,
@@ -514,7 +462,7 @@ export default [
 				"error",
 				{allowArgumentsExplicitlyTypedAsAny: true},
 			],
-			"curly": ["error", "all"],
+			curly: ["error", "all"],
 			"prefer-const": "error",
 
 			"no-useless-catch": "error",
@@ -558,7 +506,7 @@ export default [
 			],
 
 			// Hold in general. Adopt for `x == null`, the one blessed use.
-			"eqeqeq": ["error", "always", {null: "ignore"}],
+			eqeqeq: ["error", "always", {null: "ignore"}],
 			"@typescript-eslint/array-type": ["error", {default: "array-simple"}],
 			"no-console": ["error", {allow: ["info", "warn", "error"]}],
 
