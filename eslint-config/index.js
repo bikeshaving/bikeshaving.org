@@ -446,6 +446,8 @@ export default [
 			"acrocase/acrocase": "error",
 			"esfold/breaks": "error",
 
+			// TypeScript resolves names better than a globals list does.
+			"no-undef": "off",
 			"no-unused-vars": "off",
 			"@typescript-eslint/no-unused-vars": [
 				"error",
