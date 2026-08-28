@@ -83,11 +83,12 @@ const noLeadingTypeOperator = {
 		const source = context.sourceCode;
 
 		function check(node) {
-			const first = node.types[0];
-			const operator = source.getTokenBefore(first);
-			if (!operator || operator.range[0] < node.range[0]) {
+			const operator = source.getFirstToken(node);
+			if (operator.value !== "|" && operator.value !== "&") {
 				return;
 			}
+
+			const first = source.getTokenAfter(operator);
 
 			context.report({
 				node,
@@ -103,12 +104,16 @@ const noLeadingTypeOperator = {
 						return null;
 					}
 
-					const gap = source.text
-						.slice(previous.range[1], first.range[0])
-						.replace(operator.value, "");
+					const before = source.text.slice(
+						previous.range[1],
+						operator.range[0],
+					);
+					const after = source.text
+						.slice(operator.range[1], first.range[0])
+						.replace(/^[^\S\n]+/, "");
 					return fixer.replaceTextRange(
 						[previous.range[1], first.range[0]],
-						/\n/.test(gap) ? gap.replace(/[^\S\n]+$/, "") : " ",
+						before + after,
 					);
 				},
 			});
