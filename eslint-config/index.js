@@ -315,10 +315,89 @@ const noChangelogComments = {
 	},
 };
 
+const noExportedSymbols = {
+	meta: {
+		type: "problem",
+		schema: [],
+		messages: {
+			exported:
+				"An exported `Symbol()` is not private. Keep the key in its module and export a function that does the work, or use `Symbol.for()` if the key is meant to be public.",
+		},
+	},
+	create(context) {
+		const source = context.sourceCode;
+
+		function unwrap(node) {
+			let current = node;
+			while (
+				current?.type === "TSAsExpression" ||
+				current?.type === "TSSatisfiesExpression" ||
+				current?.type === "TSNonNullExpression"
+			) {
+				current = current.expression;
+			}
+			return current;
+		}
+
+		function isPrivateSymbol(node) {
+			const value = unwrap(node);
+			return (
+				value?.type === "CallExpression" &&
+				value.callee.type === "Identifier" &&
+				value.callee.name === "Symbol"
+			);
+		}
+
+		function declaresPrivateSymbol(name, scope) {
+			const variable = scope.set.get(name);
+			for (const def of variable?.defs ?? []) {
+				if (
+					def.node.type === "VariableDeclarator" &&
+					isPrivateSymbol(def.node.init)
+				) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+		return {
+			"ExportNamedDeclaration > VariableDeclaration > VariableDeclarator"(
+				node,
+			) {
+				if (isPrivateSymbol(node.init)) {
+					context.report({node: node.id, messageId: "exported"});
+				}
+			},
+
+			"ExportNamedDeclaration[declaration=null] > ExportSpecifier"(node) {
+				if (
+					node.local.type === "Identifier" &&
+					declaresPrivateSymbol(node.local.name, source.getScope(node.parent))
+				) {
+					context.report({node, messageId: "exported"});
+				}
+			},
+
+			ExportDefaultDeclaration(node) {
+				const value = unwrap(node.declaration);
+				if (
+					isPrivateSymbol(value) ||
+					(value?.type === "Identifier" &&
+						declaresPrivateSymbol(value.name, source.getScope(node)))
+				) {
+					context.report({node, messageId: "exported"});
+				}
+			},
+		};
+	},
+};
+
 const b9g = {
 	rules: {
 		"padding-around-declarations": paddingAroundDeclarations,
 		"no-changelog-comments": noChangelogComments,
+		"no-exported-symbols": noExportedSymbols,
 
 		"no-leading-type-operator": noLeadingTypeOperator,
 
