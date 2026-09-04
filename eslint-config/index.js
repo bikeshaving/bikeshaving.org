@@ -488,6 +488,13 @@ const b9gRules = Object.fromEntries(
 	Object.keys(b9g.rules).map((name) => [`@b9g/${name}`, "error"]),
 );
 
+// The TypeScript set is the same one typescript-eslint's own preset matches,
+// so the block that disables the core rules and the block that supplies the
+// parser always agree on which files are TypeScript.
+const TS = "**/*.{ts,tsx,mts,cts}";
+const JS = "**/*.{js,jsx,mjs,cjs}";
+const COMMONJS = "**/*.{cjs,cts}";
+
 export default [
 	{
 		ignores: [
@@ -509,7 +516,7 @@ export default [
 	js.configs.recommended,
 	typescript.configs["flat/eslint-recommended"],
 	{
-		files: ["**/*.{js,jsx,ts,tsx}"],
+		files: [JS, TS],
 		languageOptions: {
 			parser: typescriptParser,
 			parserOptions: {sourceType: "module"},
@@ -623,6 +630,8 @@ export default [
 			"@typescript-eslint/no-require-imports": "error",
 			"@typescript-eslint/triple-slash-reference": "error",
 			"no-var": "error",
+			"prefer-rest-params": "error",
+			"prefer-spread": "error",
 			"no-sequences": "error",
 			"no-void": ["error", {allowAsStatement: true}],
 			"object-shorthand": ["error", "always"],
@@ -637,10 +646,22 @@ export default [
 		},
 	},
 	{
-		files: ["**/*.{js,jsx}"],
+		files: [JS],
 		rules: {
 			"@b9g/explicit-declaration-return-type": "off",
 			"@typescript-eslint/explicit-module-boundary-types": "off",
+		},
+	},
+
+	// A .cjs or .cts file exists to be CommonJS, so the three rules that hold
+	// the rest of the codebase to ES modules do not apply to it.
+	{
+		files: [COMMONJS],
+		languageOptions: {parserOptions: {sourceType: "commonjs"}},
+		rules: {
+			"@typescript-eslint/no-require-imports": "off",
+			"@b9g/no-import-equals": "off",
+			"@b9g/no-export-equals": "off",
 		},
 	},
 ];
