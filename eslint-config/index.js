@@ -442,12 +442,39 @@ const mergedSlotsOnly = {
 	},
 };
 
+const noSymbolFields = {
+	meta: {
+		type: "problem",
+		schema: [],
+		messages: {
+			slot: "A symbol-keyed field belongs in the class's merged interface. A field here also emits an own property set to undefined before the constructor runs.",
+			constant:
+				"A symbol-keyed static is a module constant with ceremony. Declare it in the module and read it by name.",
+		},
+	},
+	create(context) {
+		return {
+			PropertyDefinition(node) {
+				if (!node.computed || node.key.type === "Literal") {
+					return;
+				}
+
+				context.report({
+					node,
+					messageId: node.static ? "constant" : "slot",
+				});
+			},
+		};
+	},
+};
+
 const b9g = {
 	rules: {
 		"padding-around-declarations": paddingAroundDeclarations,
 		"no-changelog-comments": noChangelogComments,
 		"no-exported-symbols": noExportedSymbols,
 		"merged-slots-only": mergedSlotsOnly,
+		"no-symbol-fields": noSymbolFields,
 
 		"no-leading-type-operator": noLeadingTypeOperator,
 
