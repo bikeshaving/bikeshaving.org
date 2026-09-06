@@ -393,11 +393,61 @@ const noExportedSymbols = {
 	},
 };
 
+const mergedSlotsOnly = {
+	meta: {
+		type: "problem",
+		schema: [],
+		messages: {
+			behavior:
+				"A merged interface holds private slots only. A method the class never implements still typechecks, and fails when it is called. A stored callback is a slot: write `[key]: () => void`.",
+			named:
+				"A merged interface holds private slots only. A named member belongs in the class body, where the public surface is, and nothing outside the module can reach a symbol-keyed one.",
+			signature:
+				"A merged interface holds private slots only. Move this signature to a separate interface the class implements.",
+		},
+	},
+	create(context) {
+		const classNames = new Set();
+
+		return {
+			Program(program) {
+				for (const statement of program.body) {
+					const declaration =
+						statement.type === "ExportNamedDeclaration" ||
+						statement.type === "ExportDefaultDeclaration"
+							? statement.declaration
+							: statement;
+					if (declaration?.type === "ClassDeclaration" && declaration.id) {
+						classNames.add(declaration.id.name);
+					}
+				}
+			},
+
+			TSInterfaceDeclaration(node) {
+				if (!classNames.has(node.id.name)) {
+					return;
+				}
+
+				for (const member of node.body.body) {
+					if (member.type === "TSMethodSignature") {
+						context.report({node: member, messageId: "behavior"});
+					} else if (member.type !== "TSPropertySignature") {
+						context.report({node: member, messageId: "signature"});
+					} else if (!member.computed || member.key.type === "Literal") {
+						context.report({node: member, messageId: "named"});
+					}
+				}
+			},
+		};
+	},
+};
+
 const b9g = {
 	rules: {
 		"padding-around-declarations": paddingAroundDeclarations,
 		"no-changelog-comments": noChangelogComments,
 		"no-exported-symbols": noExportedSymbols,
+		"merged-slots-only": mergedSlotsOnly,
 
 		"no-leading-type-operator": noLeadingTypeOperator,
 
@@ -607,7 +657,7 @@ export default [
 			"no-console": ["error", {allow: ["info", "warn", "error"]}],
 
 			"@typescript-eslint/no-misused-new": "error",
-			"@typescript-eslint/no-unsafe-declaration-merging": "error",
+			"@typescript-eslint/no-unsafe-declaration-merging": "off",
 			"@typescript-eslint/no-unsafe-function-type": "error",
 			"@typescript-eslint/no-wrapper-object-types": "error",
 			// An empty interface extending one supertype is the extension point
