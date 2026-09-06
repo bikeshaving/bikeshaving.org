@@ -451,7 +451,7 @@ const noSymbolFields = {
 		type: "problem",
 		schema: [],
 		messages: {
-			slot: "A symbol-keyed field belongs in the class's merged interface. A field here also emits an own property set to undefined before the constructor runs.",
+			slot: "A module-local symbol slot belongs in the class's merged interface. A field here also emits an own property set to undefined before the constructor runs. A well-known symbol such as `[Symbol.iterator]` stays on the class.",
 			constant:
 				"A symbol-keyed static is a module constant with ceremony. Declare it in the module and read it by name.",
 		},
@@ -459,7 +459,7 @@ const noSymbolFields = {
 	create(context) {
 		return {
 			PropertyDefinition(node) {
-				if (!node.computed || node.key.type === "Literal") {
+				if (!node.computed || node.key.type !== "Identifier") {
 					return;
 				}
 
