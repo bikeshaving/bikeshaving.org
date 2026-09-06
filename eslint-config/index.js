@@ -430,6 +430,10 @@ const mergedSlotsOnly = {
 
 				for (const member of node.body.body) {
 					if (member.type === "TSMethodSignature") {
+						if (member.kind === "get" || member.kind === "set") {
+							continue;
+						}
+
 						context.report({node: member, messageId: "behavior"});
 					} else if (member.type !== "TSPropertySignature") {
 						context.report({node: member, messageId: "signature"});
