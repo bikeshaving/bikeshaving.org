@@ -32,6 +32,6 @@
 		"eslint": ">=9",
 		"eslint-plugin-acrocase": ">=0.0.1",
 		"eslint-plugin-crank": ">=0.2.2",
-		"eslint-plugin-esfold": ">=0.1.0"
+		"eslint-plugin-esfold": ">=0.1.2"
 	}
 }

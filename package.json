@@ -18,6 +18,6 @@
 		"eslint": "^9.0.0",
 		"eslint-plugin-acrocase": "^0.1.0",
 		"eslint-plugin-crank": "^0.2.2",
-		"eslint-plugin-esfold": "^0.1.0"
+		"eslint-plugin-esfold": "^0.1.2"
 	}
 }

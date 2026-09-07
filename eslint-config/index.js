@@ -463,10 +463,7 @@ const noSymbolFields = {
 					return;
 				}
 
-				context.report({
-					node,
-					messageId: node.static ? "constant" : "slot",
-				});
+				context.report({node, messageId: node.static ? "constant" : "slot"});
 			},
 		};
 	},
@@ -619,7 +616,7 @@ export default [
 			...crank.configs.recommended.rules,
 
 			"acrocase/acrocase": "error",
-			"esfold/breaks": "error",
+			"esfold/breaks": ["error", {join: true}],
 
 			// TypeScript resolves names better than a globals list does.
 			"no-undef": "off",
