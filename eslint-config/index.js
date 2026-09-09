@@ -477,6 +477,98 @@ const noSymbolFields = {
 	},
 };
 
+const noRedundantNullishComparison = {
+	meta: {
+		type: "problem",
+		schema: [],
+		fixable: "code",
+		messages: {
+			redundant:
+				"`{{operand}} {{loose}} null` is what this says, in one comparison instead of two. It also reads `{{operand}}` once, so a getter runs once.",
+			undefined:
+				"`{{loose}} undefined` and `{{loose}} null` test the same two values. `null` is a literal, and `undefined` is a name something else can bind.",
+		},
+	},
+	create(context) {
+		const source = context.sourceCode;
+
+		function nullish(node) {
+			if (node.type === "Literal" && node.raw === "null") {
+				return "null";
+			}
+
+			if (node.type === "Identifier" && node.name === "undefined") {
+				return "undefined";
+			}
+
+			return null;
+		}
+
+		function split(node, operator) {
+			if (node.type !== "BinaryExpression" || node.operator !== operator) {
+				return null;
+			}
+
+			const left = nullish(node.left);
+			const right = nullish(node.right);
+			if (right !== null && left === null) {
+				return {operand: node.left, kind: right};
+			}
+
+			if (left !== null && right === null) {
+				return {operand: node.right, kind: left};
+			}
+
+			return null;
+		}
+
+		return {
+			LogicalExpression(node) {
+				const strict = node.operator === "||" ? "===" : "!==";
+				const loose = node.operator === "||" ? "==" : "!=";
+				const left = split(node.left, strict);
+				const right = split(node.right, strict);
+				if (left === null || right === null || left.kind === right.kind) {
+					return;
+				}
+
+				const operand = source.getText(left.operand);
+				if (operand !== source.getText(right.operand)) {
+					return;
+				}
+
+				context.report({
+					node,
+					messageId: "redundant",
+					data: {operand, loose},
+					fix: (fixer) => fixer.replaceText(node, `${operand} ${loose} null`),
+				});
+			},
+
+			BinaryExpression(node) {
+				if (node.operator !== "==" && node.operator !== "!=") {
+					return;
+				}
+
+				const target =
+					nullish(node.right) === "undefined"
+						? node.right
+						: nullish(node.left) === "undefined" ? node.left : null;
+				if (target === null) {
+					return;
+				}
+
+				context.report({
+					node: target,
+					messageId: "undefined",
+					data: {loose: node.operator},
+					fix: (fixer) => fixer.replaceText(target, "null"),
+				});
+			},
+		};
+	},
+};
+
 const b9g = {
 	rules: {
 		"padding-around-declarations": paddingAroundDeclarations,
@@ -484,6 +576,7 @@ const b9g = {
 		"no-exported-symbols": noExportedSymbols,
 		"merged-slots-only": mergedSlotsOnly,
 		"no-symbol-fields": noSymbolFields,
+		"no-redundant-nullish-comparison": noRedundantNullishComparison,
 
 		"no-leading-type-operator": noLeadingTypeOperator,
 
