@@ -485,8 +485,6 @@ const noRedundantNullishComparison = {
 		messages: {
 			redundant:
 				"`{{operand}} {{loose}} null` is what this says, in one comparison instead of two. It also reads `{{operand}}` once, so a getter runs once.",
-			undefined:
-				"`{{loose}} undefined` and `{{loose}} null` test the same two values. `null` is a literal, and `undefined` is a name something else can bind.",
 		},
 	},
 	create(context) {
@@ -542,27 +540,6 @@ const noRedundantNullishComparison = {
 					messageId: "redundant",
 					data: {operand, loose},
 					fix: (fixer) => fixer.replaceText(node, `${operand} ${loose} null`),
-				});
-			},
-
-			BinaryExpression(node) {
-				if (node.operator !== "==" && node.operator !== "!=") {
-					return;
-				}
-
-				const target =
-					nullish(node.right) === "undefined"
-						? node.right
-						: nullish(node.left) === "undefined" ? node.left : null;
-				if (target === null) {
-					return;
-				}
-
-				context.report({
-					node: target,
-					messageId: "undefined",
-					data: {loose: node.operator},
-					fix: (fixer) => fixer.replaceText(target, "null"),
 				});
 			},
 		};
