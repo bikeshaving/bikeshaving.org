@@ -454,29 +454,6 @@ const mergedSlotsOnly = {
 	},
 };
 
-const noSymbolFields = {
-	meta: {
-		type: "problem",
-		schema: [],
-		messages: {
-			slot: "A symbol slot goes in the merged interface, or behind `declare`. The class body is the public surface.",
-			constant:
-				"A symbol-keyed static is a module constant in disguise. Declare it in the module.",
-		},
-	},
-	create(context) {
-		return {
-			PropertyDefinition(node) {
-				if (!node.computed || node.key.type !== "Identifier" || node.declare) {
-					return;
-				}
-
-				context.report({node, messageId: node.static ? "constant" : "slot"});
-			},
-		};
-	},
-};
-
 const noRedundantNullishComparison = {
 	meta: {
 		type: "problem",
@@ -552,7 +529,6 @@ const b9g = {
 		"no-changelog-comments": noChangelogComments,
 		"no-exported-symbols": noExportedSymbols,
 		"merged-slots-only": mergedSlotsOnly,
-		"no-symbol-fields": noSymbolFields,
 		"no-redundant-nullish-comparison": noRedundantNullishComparison,
 
 		"no-leading-type-operator": noLeadingTypeOperator,
