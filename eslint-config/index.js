@@ -111,7 +111,7 @@ const noLeadingTypeOperator = {
 		fixable: "code",
 		messages: {
 			banned:
-				"A union or intersection does not start with `{{operator}}`. Write the first member, then the operator at the end of the line.",
+				"A union or intersection does not lead with `{{operator}}`. Trail it at the end of the line.",
 		},
 	},
 	create(context) {
@@ -292,7 +292,7 @@ const noChangelogComments = {
 		schema: [],
 		messages: {
 			changelog:
-				"A comment describes the code that is here, not how it got here. Say what it does in the present tense, or delete it.",
+				"A comment describes the code that is here, not how it got here.",
 		},
 	},
 	create(context) {
@@ -329,7 +329,7 @@ const noExportedSymbols = {
 		schema: [],
 		messages: {
 			exported:
-				"An exported `Symbol()` is not private. Keep the key in its module and export a function that does the work, or use `Symbol.for()` if the key is meant to be public.",
+				"An exported `Symbol()` is not private. Keep the key in its module, or use `Symbol.for()`.",
 		},
 	},
 	create(context) {
@@ -407,11 +407,11 @@ const mergedSlotsOnly = {
 		schema: [],
 		messages: {
 			behavior:
-				"A merged interface holds private slots only. A method the class never implements still typechecks, and fails when it is called. A stored callback is a slot: write `[key]: () => void`.",
+				"An unimplemented method here typechecks and fails when called. A stored callback is a slot: `[key]: () => void`.",
 			named:
-				"A merged interface holds private slots only. A named member belongs in the class body, where the public surface is, and nothing outside the module can reach a symbol-keyed one.",
+				"A named member belongs in the class body. A merged interface holds symbol slots.",
 			signature:
-				"A merged interface holds private slots only. Move this signature to a separate interface the class implements.",
+				"A merged interface holds symbol slots. Move this to an interface the class implements.",
 		},
 	},
 	create(context) {
@@ -459,9 +459,9 @@ const noSymbolFields = {
 		type: "problem",
 		schema: [],
 		messages: {
-			slot: "A module-local symbol slot belongs in the class's merged interface. A field here also emits an own property set to undefined before the constructor runs. `declare` stops the emit, and a well-known symbol such as `[Symbol.iterator]` stays on the class.",
+			slot: "A symbol slot goes in the merged interface, or behind `declare`. The class body is the public surface.",
 			constant:
-				"A symbol-keyed static is a module constant with ceremony. Declare it in the module and read it by name.",
+				"A symbol-keyed static is a module constant in disguise. Declare it in the module.",
 		},
 	},
 	create(context) {
@@ -484,7 +484,7 @@ const noRedundantNullishComparison = {
 		fixable: "code",
 		messages: {
 			redundant:
-				"`{{operand}} {{loose}} null` is what this says, in one comparison instead of two. It also reads `{{operand}}` once, so a getter runs once.",
+				"`{{operand}} {{loose}} null` says this in one comparison, and reads `{{operand}}` once.",
 		},
 	},
 	create(context) {
@@ -564,17 +564,17 @@ const b9g = {
 
 		"no-access-modifiers": selectorRule(
 			":matches(PropertyDefinition, MethodDefinition, TSAbstractPropertyDefinition, TSAbstractMethodDefinition)[accessibility]",
-			"TypeScript access modifiers are banned. Omit the modifier, and keep internals behind a module-local symbol.",
+			"Access modifiers are banned. Keep internals behind a module-local symbol.",
 		),
 
 		"no-field-initializers": selectorRule(
 			"PropertyDefinition[value][static=false]",
-			"Instance field initializers are banned. Assign it in the constructor, where the whole shape is in one place.",
+			"Instance field initializers are banned. Assign it in the constructor.",
 		),
 
 		"no-private-fields": selectorRule(
 			":matches(PropertyDefinition, MethodDefinition, TSAbstractPropertyDefinition, TSAbstractMethodDefinition, AccessorProperty)[key.type='PrivateIdentifier']",
-			"Private fields and methods are banned. Use a module-local symbol for state, or a module-local function for behavior.",
+			"Private fields are banned. Use a module-local symbol, or a module-local function.",
 		),
 
 		"no-empty-catch-binding": selectorRule(
@@ -602,7 +602,7 @@ const b9g = {
 
 		"no-decorators": selectorRule(
 			"Decorator",
-			"Decorators are banned. Their meaning lives in an imported function you cannot see at the use site. Use a higher-order function.",
+			"A decorator hides its meaning in an import you cannot see here. Use a higher-order function.",
 		),
 		"no-auto-accessors": selectorRule(
 			"AccessorProperty",
@@ -616,12 +616,12 @@ const b9g = {
 
 		"capitalize-namespace-imports": selectorRule(
 			"ImportNamespaceSpecifier[local.name=/^[a-z]/]",
-			'Capitalize a namespace import. `import * as Path from "node:path"` keeps `path` free as a variable name.',
+			"Capitalize a namespace import. `* as Path` keeps `path` free as a variable.",
 		),
 
 		"prefer-function-declarations": selectorRule(
 			":matches(Program, ExportNamedDeclaration, ExportDefaultDeclaration) > VariableDeclaration > VariableDeclarator > :matches(ArrowFunctionExpression, FunctionExpression)[body.body.length>0]",
-			"A top-level function with a body should be a `function` declaration, not a const-assigned expression. An empty body or a single expression is fine.",
+			"A top-level function with a body is a `function` declaration, not a const.",
 		),
 
 		"explicit-declaration-return-type": selectorRule(
@@ -631,7 +631,7 @@ const b9g = {
 
 		"no-deep-optional-chaining": selectorRule(
 			":matches(MemberExpression, CallExpression)[optional=true] :matches(MemberExpression, CallExpression)[optional=true]",
-			"More than one `?.` in a chain. One optional link at a trust boundary is fine. A chain of them is a broken data model.",
+			"More than one `?.` in a chain. One at a trust boundary is fine; a chain is a broken data model.",
 		),
 		"no-accumulator-spread": selectorRule(
 			"CallExpression[callee.property.name='reduce'] > ArrowFunctionExpression > :matches(ObjectExpression, ArrayExpression) > SpreadElement",
