@@ -29,10 +29,19 @@ const stylistic = {
 			"after",
 			{overrides: {"?": "before", ":": "before"}},
 		],
+		// A wrapped `extends` or `implements` lands at column 0, and the rule
+		// has no option for it. Ignoring the header leaves the body checked.
 		"@stylistic/indent": [
 			"error",
 			"tab",
-			{...customized["@stylistic/indent"][2], offsetTernaryExpressions: false},
+			{
+				...customized["@stylistic/indent"][2],
+				offsetTernaryExpressions: false,
+				ignoredNodes: [
+					...customized["@stylistic/indent"][2].ignoredNodes,
+					"ClassDeclaration",
+				],
+			},
 		],
 
 		// Off, because splitting `{count} comments` over three lines is what
