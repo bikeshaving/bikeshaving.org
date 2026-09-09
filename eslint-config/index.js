@@ -47,6 +47,14 @@ const stylistic = {
 			{...customized["@stylistic/jsx-wrap-multilines"][1], arrow: "ignore"},
 		],
 
+		// A generator star binds to the name, the way every other prefix
+		// operator does. A method has no keyword to bind it to.
+		"@stylistic/generator-star-spacing": [
+			"error",
+			{before: true, after: false},
+		],
+		"@stylistic/yield-star-spacing": ["error", {before: true, after: false}],
+
 		"@stylistic/quotes": ["error", "double", {avoidEscape: true}],
 		"@stylistic/quote-props": ["error", "as-needed"],
 		"@stylistic/object-curly-spacing": ["error", "never"],
