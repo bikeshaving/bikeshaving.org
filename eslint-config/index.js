@@ -29,8 +29,9 @@ const stylistic = {
 			"after",
 			{overrides: {"?": "before", ":": "before"}},
 		],
-		// A wrapped `extends` or `implements` lands at column 0, and the rule
-		// has no option for it. Ignoring the header leaves the body checked.
+		// esfold indents a continuation line and this rule overrides it: a
+		// class header's `extends` lands at column 0, and each target in a
+		// cascade adds a level. Ignoring these two leaves the body checked.
 		"@stylistic/indent": [
 			"error",
 			"tab",
@@ -40,6 +41,7 @@ const stylistic = {
 				ignoredNodes: [
 					...customized["@stylistic/indent"][2].ignoredNodes,
 					"ClassDeclaration",
+					"AssignmentExpression",
 				],
 			},
 		],
