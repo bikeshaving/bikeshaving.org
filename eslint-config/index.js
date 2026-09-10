@@ -30,8 +30,9 @@ const stylistic = {
 			{overrides: {"?": "before", ":": "before"}},
 		],
 		// esfold indents a continuation line and this rule overrides it: a
-		// class header's `extends` lands at column 0, and each target in a
-		// cascade adds a level. Ignoring these two leaves the body checked.
+		// class header's `extends` lands at column 0, each target in a cascade
+		// adds a level, and an else-if ternary steps right on every link.
+		// Ignoring these three leaves every block still checked.
 		"@stylistic/indent": [
 			"error",
 			"tab",
@@ -42,6 +43,7 @@ const stylistic = {
 					...customized["@stylistic/indent"][2].ignoredNodes,
 					"ClassDeclaration",
 					"AssignmentExpression",
+					"ConditionalExpression > ConditionalExpression.alternate",
 				],
 			},
 		],
