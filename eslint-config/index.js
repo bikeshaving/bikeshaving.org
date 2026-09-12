@@ -68,6 +68,11 @@ const stylistic = {
 		],
 		"@stylistic/yield-star-spacing": ["error", {before: true, after: false}],
 
+		// esfold aligns a binary operator's operands and this rule pushes the
+		// second one a level deeper. The same override as the three ignored
+		// nodes above; `@stylistic/indent` still holds the block.
+		"@stylistic/indent-binary-ops": "off",
+
 		"@stylistic/quotes": ["error", "double", {avoidEscape: true}],
 		"@stylistic/quote-props": ["error", "as-needed"],
 		"@stylistic/object-curly-spacing": ["error", "never"],
