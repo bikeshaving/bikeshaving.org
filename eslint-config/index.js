@@ -708,7 +708,9 @@ export default [
 				"error",
 				{allowArgumentsExplicitlyTypedAsAny: true},
 			],
-			curly: ["error", "all"],
+			// A guard clause may go without a body: `if (!node) return;`. Braces
+			// are still required once the statement spans lines.
+			curly: ["error", "multi-line"],
 			"prefer-const": "error",
 
 			"no-useless-catch": "error",
