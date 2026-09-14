@@ -1,19 +1,9 @@
-import {jsx} from "@b9g/crank/standalone";
+import {jsx, Raw} from "@b9g/crank/standalone";
 import {renderer} from "@b9g/crank/html";
 import {Router} from "@b9g/router";
 import {Marked} from "@b9g/crankdown";
 
-function Page({title, children}: {title: string; children: unknown}) {
-	return jsx`
-    <html lang="en">
-      <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>${title}</title>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
-        <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" />
-        <style>${`
+const css = `
 body {
   font-family: "Atkinson Hyperlegible Next", sans-serif;
   max-width: 72ch;
@@ -34,7 +24,19 @@ dt { margin-top: 1rem; }
 dd { margin-left: 1.5rem; margin-top: 0.25rem; }
 strong { color: #0f3460; }
 em { color: #555; }
-        `}</style>
+`;
+
+function Page({title, children}: {title: string; children: unknown}) {
+	return jsx`
+    <html lang="en">
+      <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>${title}</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+        <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" />
+        <style><${Raw} value=${css} /></style>
       </head>
       <body>${children}</body>
     </html>
