@@ -7,7 +7,7 @@ An open source organization by [Brian Kim](https://github.com/brainkim).
 <dt><strong>yak shaving</strong> /ˈjækˌʃeɪvɪŋ/ <em>n.</em></dt>
 <dd>The performance of a sequence of seemingly unrelated trivial tasks to accomplish a larger goal. Coined by Carlin Vieri at the MIT AI Lab after an episode of *Ren & Stimpy*. You need to deploy your application, but first you need to fix a build script, but the script depends on a package that requires a newer runtime, but upgrading the runtime breaks another dependency…</dd>
 
-<dt><strong>bikeshaving</strong> /ˈbaɪkˌʃeɪvɪŋ/ <em>n.</em></dt>
+<dt><strong>bike shaving</strong> /ˈbaɪkˌʃeɪvɪŋ/ <em>n.</em></dt>
 <dd>The process of finding reasons to choose between nearly arbitrary options when creating new technology. The design of the modern safety bicycle looks obvious now, but every aspect of it was chosen over alternatives that once seemed just as reasonable. Why are the wheels the same size? Why does the chain turn the rear wheel? Why is the fork bent? The best software is *shaved* as the bicycle was, until nobody can imagine it otherwise.</dd>
 </dl>
 
