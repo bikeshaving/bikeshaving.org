@@ -1,10 +1,12 @@
+import {builtinModules} from "node:module";
+
 import js from "@eslint/js";
+import stylisticPlugin from "@stylistic/eslint-plugin";
 import typescript from "@typescript-eslint/eslint-plugin";
 import typescriptParser from "@typescript-eslint/parser";
 import acrocase from "eslint-plugin-acrocase";
 import crank from "eslint-plugin-crank";
 import esfold from "eslint-plugin-esfold";
-import stylisticPlugin from "@stylistic/eslint-plugin";
 
 const customized = stylisticPlugin.configs.customize({
 	indent: "tab",
@@ -541,8 +543,219 @@ const noRedundantNullishComparison = {
 	},
 };
 
+const BUILTINS = new Set(builtinModules);
+
+function importGroup(node) {
+	if (node.specifiers.length === 0) {
+		return 0;
+	}
+
+	const module = node.source.value;
+	if (module.startsWith("node:") || BUILTINS.has(module)) {
+		return 1;
+	}
+
+	if (module.startsWith(".")) {
+		return 3;
+	}
+
+	return 2;
+}
+
+function importShape(node) {
+	const [first] = node.specifiers;
+	if (!first) {
+		return 0;
+	}
+
+	if (first.type === "ImportNamespaceSpecifier") {
+		return 1;
+	}
+
+	if (first.type === "ImportDefaultSpecifier") {
+		return 2;
+	}
+
+	return 3;
+}
+
+function importKey(node, index) {
+	const group = importGroup(node);
+	return [
+		group,
+		group === 0 ? "" : node.source.value.toLowerCase(),
+		importShape(node),
+		node.importKind === "type" ? 1 : 0,
+		index,
+	];
+}
+
+function compareKeys(a, b) {
+	for (let i = 0; i < a.length; i++) {
+		if (a[i] < b[i]) {
+			return -1;
+		}
+
+		if (a[i] > b[i]) {
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+const importOrder = {
+	meta: {
+		type: "layout",
+		fixable: "code",
+		schema: [],
+		messages: {
+			order:
+				"Imports go side-effect, builtin, package, then relative. Sort each group by module and put a blank line between groups.",
+		},
+	},
+	create(context) {
+		const source = context.sourceCode;
+		return {
+			Program(program) {
+				const block = [];
+				for (const statement of program.body) {
+					if (statement.type !== "ImportDeclaration") {
+						break;
+					}
+
+					block.push(statement);
+				}
+
+				if (block.length < 2) {
+					return;
+				}
+
+				const sorted = block
+					.map((node, index) => ({node, index, key: importKey(node, index)}))
+					.sort((a, b) => compareKeys(a.key, b.key));
+
+				// Each import carries the comment written above it.
+				const slice = (entry) => {
+					const start =
+						entry.index === 0
+							? entry.node.range[0]
+							: block[entry.index - 1].range[1];
+					return source.text
+						.slice(start, entry.node.range[1])
+						.replace(/^\s*\n/, "");
+				};
+
+				let expected = "";
+				let previousGroup = null;
+				for (const entry of sorted) {
+					const group = entry.key[0];
+					if (previousGroup !== null) {
+						expected += group === previousGroup ? "\n" : "\n\n";
+					}
+
+					expected += slice(entry);
+					previousGroup = group;
+				}
+
+				const range = [block[0].range[0], block.at(-1).range[1]];
+				if (source.text.slice(range[0], range[1]) === expected) {
+					return;
+				}
+
+				context.report({
+					node: block[0],
+					messageId: "order",
+					fix: (fixer) => fixer.replaceTextRange(range, expected),
+				});
+			},
+		};
+	},
+};
+
+// The groups `@typescript-eslint/member-ordering` sets below: signatures,
+// fields, the constructor, accessors, then methods.
+const MEMBER_GROUPS = {
+	TSIndexSignature: 0,
+	PropertyDefinition: 1,
+	TSAbstractPropertyDefinition: 1,
+	AccessorProperty: 1,
+};
+
+function memberGroup(member) {
+	if (member.type in MEMBER_GROUPS) {
+		return MEMBER_GROUPS[member.type];
+	}
+
+	if (member.kind === "constructor") {
+		return 2;
+	}
+
+	if (member.kind === "get" || member.kind === "set") {
+		return 3;
+	}
+
+	return 4;
+}
+
+function isSymbolKeyed(member) {
+	return member.computed === true && member.key?.type === "Identifier";
+}
+
+const memberVisibilityOrder = {
+	meta: {
+		type: "layout",
+		schema: [],
+		messages: {
+			staticFirst:
+				"A static member goes before the instance members of its group.",
+			publicFirst:
+				"A symbol-keyed member goes after the public members of its group.",
+		},
+	},
+	create(context) {
+		return {
+			ClassBody(body) {
+				const groups = new Map();
+				for (const member of body.body) {
+					const group = memberGroup(member);
+					if (!groups.has(group)) {
+						groups.set(group, []);
+					}
+
+					groups.get(group).push(member);
+				}
+
+				for (const members of groups.values()) {
+					let seenInstance = false;
+					for (const member of members) {
+						if (!member.static) {
+							seenInstance = true;
+						} else if (seenInstance) {
+							context.report({node: member, messageId: "staticFirst"});
+							break;
+						}
+					}
+
+					let seenSymbol = false;
+					for (const member of members) {
+						if (isSymbolKeyed(member)) {
+							seenSymbol = true;
+						} else if (seenSymbol && member.key) {
+							context.report({node: member, messageId: "publicFirst"});
+							break;
+						}
+					}
+				}
+			},
+		};
+	},
+};
+
 const b9g = {
 	rules: {
+		"import-order": importOrder,
+		"member-visibility-order": memberVisibilityOrder,
 		"padding-around-declarations": paddingAroundDeclarations,
 		"no-changelog-comments": noChangelogComments,
 		"no-exported-symbols": noExportedSymbols,
@@ -712,6 +925,42 @@ export default [
 			// are still required once the statement spans lines.
 			curly: ["error", "multi-line"],
 			"prefer-const": "error",
+
+			// A const or let is declared above every use, including uses inside
+			// function bodies. Functions and classes may sit below their callers.
+			"no-use-before-define": "off",
+			"@typescript-eslint/no-use-before-define": [
+				"error",
+				{
+					functions: false,
+					classes: false,
+					variables: true,
+					enums: false,
+					typedefs: false,
+					ignoreTypeReferences: true,
+				},
+			],
+
+			// A class reads top to bottom: what it holds, how it is built, what
+			// it derives, then what it does.
+			"@typescript-eslint/member-ordering": [
+				"error",
+				{
+					classes: [
+						"signature",
+						"field",
+						"constructor",
+						["get", "set"],
+						"method",
+					],
+					interfaces: "never",
+					typeLiterals: "never",
+				},
+			],
+			"sort-imports": [
+				"error",
+				{ignoreCase: true, ignoreDeclarationSort: true},
+			],
 
 			"no-useless-catch": "error",
 			"no-empty": ["error", {allowEmptyCatch: false}],

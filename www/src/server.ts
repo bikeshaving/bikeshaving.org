@@ -1,7 +1,7 @@
-import {jsx, Raw} from "@b9g/crank/standalone";
 import {renderer} from "@b9g/crank/html";
-import {Router} from "@b9g/router";
+import {jsx, Raw} from "@b9g/crank/standalone";
 import {Marked} from "@b9g/crankdown";
+import {Router} from "@b9g/router";
 
 const css = `
 body {
