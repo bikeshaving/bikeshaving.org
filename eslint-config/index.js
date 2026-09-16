@@ -607,11 +607,10 @@ function compareKeys(a, b) {
 const importOrder = {
 	meta: {
 		type: "layout",
-		fixable: "code",
 		schema: [],
 		messages: {
 			order:
-				"Imports go side-effect, builtin, package, then relative. Sort each group by module and put a blank line between groups.",
+				"Imports go side-effect, builtin, package, then relative. Sort each group by module and put a blank line between groups. Reordering changes which module runs first: pin an order with `import \"./module.js\"` above.",
 		},
 	},
 	create(context) {
@@ -663,11 +662,7 @@ const importOrder = {
 					return;
 				}
 
-				context.report({
-					node: block[0],
-					messageId: "order",
-					fix: (fixer) => fixer.replaceTextRange(range, expected),
-				});
+				context.report({node: block[0], messageId: "order"});
 			},
 		};
 	},
