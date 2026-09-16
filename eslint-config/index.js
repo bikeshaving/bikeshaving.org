@@ -747,7 +747,7 @@ const memberVisibilityOrder = {
 	},
 };
 
-const mergedInterfaceAdjacent = {
+const adjacentMergedInterfaces = {
 	meta: {
 		type: "layout",
 		schema: [],
@@ -805,7 +805,7 @@ const mergedInterfaceAdjacent = {
 
 const b9g = {
 	rules: {
-		"merged-interface-adjacent": mergedInterfaceAdjacent,
+		"adjacent-merged-interfaces": adjacentMergedInterfaces,
 		"import-order": importOrder,
 		"member-visibility-order": memberVisibilityOrder,
 		"padding-around-declarations": paddingAroundDeclarations,
