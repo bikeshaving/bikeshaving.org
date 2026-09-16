@@ -1015,6 +1015,9 @@ export default [
 			],
 			"@typescript-eslint/adjacent-overload-signatures": "error",
 			"grouped-accessor-pairs": ["error", "getBeforeSet"],
+			"default-case-last": "error",
+			"default-param-last": "off",
+			"@typescript-eslint/default-param-last": "error",
 
 			"no-useless-catch": "error",
 			"no-empty": ["error", {allowEmptyCatch: false}],
