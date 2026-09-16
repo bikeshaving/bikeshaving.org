@@ -604,7 +604,7 @@ function compareKeys(a, b) {
 	return 0;
 }
 
-const importOrder = {
+const importOrdering = {
 	meta: {
 		type: "layout",
 		schema: [],
@@ -697,7 +697,7 @@ function isSymbolKeyed(member) {
 	return member.computed === true && member.key?.type === "Identifier";
 }
 
-const memberVisibilityOrder = {
+const memberVisibilityOrdering = {
 	meta: {
 		type: "layout",
 		schema: [],
@@ -806,8 +806,8 @@ const adjacentMergedInterfaces = {
 const b9g = {
 	rules: {
 		"adjacent-merged-interfaces": adjacentMergedInterfaces,
-		"import-order": importOrder,
-		"member-visibility-order": memberVisibilityOrder,
+		"import-ordering": importOrdering,
+		"member-visibility-ordering": memberVisibilityOrdering,
 		"padding-around-declarations": paddingAroundDeclarations,
 		"no-changelog-comments": noChangelogComments,
 		"no-exported-symbols": noExportedSymbols,
