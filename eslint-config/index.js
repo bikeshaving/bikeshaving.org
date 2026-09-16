@@ -747,8 +747,65 @@ const memberVisibilityOrder = {
 	},
 };
 
+const mergedInterfaceAdjacent = {
+	meta: {
+		type: "layout",
+		schema: [],
+		messages: {
+			adjacent:
+				"A merged interface is half of its class. Put it directly above the class.",
+		},
+	},
+	create(context) {
+		function unwrap(node) {
+			if (
+				(node.type === "ExportNamedDeclaration" ||
+					node.type === "ExportDefaultDeclaration") &&
+				node.declaration
+			) {
+				return node.declaration;
+			}
+
+			return node;
+		}
+
+		return {
+			Program(program) {
+				const body = program.body.map(unwrap);
+				const classes = new Map();
+				for (let i = 0; i < body.length; i++) {
+					const node = body[i];
+					if (node.type === "ClassDeclaration" && node.id) {
+						classes.set(node.id.name, i);
+					}
+				}
+
+				for (let i = 0; i < body.length; i++) {
+					const node = body[i];
+					// An empty interface is the extension point other packages merge
+					// into, and it belongs wherever the export list reads best.
+					if (
+						node.type !== "TSInterfaceDeclaration" ||
+						node.body.body.length === 0
+					) {
+						continue;
+					}
+
+					const found = classes.get(node.id.name);
+					if (found === undefined || found === i + 1) {
+						continue;
+					}
+
+					context.report({node: node.id, messageId: "adjacent"});
+				}
+			},
+		};
+	},
+};
+
 const b9g = {
 	rules: {
+		"merged-interface-adjacent": mergedInterfaceAdjacent,
 		"import-order": importOrder,
 		"member-visibility-order": memberVisibilityOrder,
 		"padding-around-declarations": paddingAroundDeclarations,
@@ -956,6 +1013,8 @@ export default [
 				"error",
 				{ignoreCase: true, ignoreDeclarationSort: true},
 			],
+			"@typescript-eslint/adjacent-overload-signatures": "error",
+			"grouped-accessor-pairs": ["error", "getBeforeSet"],
 
 			"no-useless-catch": "error",
 			"no-empty": ["error", {allowEmptyCatch: false}],
