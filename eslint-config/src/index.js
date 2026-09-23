@@ -75,7 +75,11 @@ const stylistic = {
 		// nodes above; `@stylistic/indent` still holds the block.
 		"@stylistic/indent-binary-ops": "off",
 
-		"@stylistic/quotes": ["error", "double", {avoidEscape: true}],
+		"@stylistic/quotes": [
+			"error",
+			"double",
+			{avoidEscape: true, allowTemplateLiterals: "avoidEscape"},
+		],
 		"@stylistic/quote-props": ["error", "as-needed"],
 		"@stylistic/object-curly-spacing": ["error", "never"],
 		"@stylistic/array-bracket-spacing": ["error", "never"],
@@ -94,6 +98,10 @@ const stylistic = {
 				allowClassStart: true,
 				allowObjectStart: true,
 				allowArrayStart: true,
+				allowInterfaceStart: true,
+				allowTypeStart: true,
+				allowEnumStart: true,
+				allowModuleStart: true,
 			},
 		],
 		"@stylistic/multiline-comment-style": [
@@ -1083,7 +1091,10 @@ export default [
 				"error",
 				{allowTaggedTemplates: true},
 			],
-			"@typescript-eslint/consistent-type-imports": "error",
+			"@typescript-eslint/consistent-type-imports": [
+				"error",
+				{fixStyle: "inline-type-imports"},
+			],
 			"@typescript-eslint/no-import-type-side-effects": "error",
 			"@typescript-eslint/no-require-imports": "error",
 			"@typescript-eslint/triple-slash-reference": "error",
